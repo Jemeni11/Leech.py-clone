@@ -8,8 +8,6 @@ from math import floor
 import textwrap
 import requests
 import logging
-import os
-import sys
 
 logger = logging.getLogger(__name__)
 
@@ -100,49 +98,27 @@ def get_image_from_url(url: str):
         image = BytesIO(img.content)
         image.seek(0)
 
-        img_format = Image.open(image).format
-
         bigphoto = Image.open(image).convert("RGBA")
         # Establish Target Size
-        target_byte_count = 95_000
+        target_byte_count = 100_000
         target_pixel_count = 2.8114 * target_byte_count
-        # Note that an image which measures
-        #     1920 by 1080
-        # pixels is approximately
-        #      737,581 bytes
-        # So we have
-        #     2.8114 pixels per byte
         scale_factor = target_pixel_count / math.prod(bigphoto.size)
-        # if
-        #     the image is already smaller than the target size
-        # then
-        #     Do not enlarge the image.
-        #     keep the image the same size.
-        # scale_factor = 1 if scale_factor >= 1 else scale_factor
         if scale_factor < 1:
-            # set new photographs size
-            # `bigphoto.size` is something like (20000, 37400)
             sml_size = tuple(int(scale_factor * dim) for dim in bigphoto.size)
-            # We cannot have two-and-a-half pixels
-            # convert decimal numbers into whole numbers
-            # sml_size = (int(number) for number in sml_size_list)
-            # cast `sml_size` to the same data-type as `bigphoto.size`
-            # copy_constructor = type(bigphoto.size)
-            # new_sml_size = copy_constructor(sml_size)
-            # create new photograph
             sml_photo = bigphoto.resize(sml_size, resample=Image.LANCZOS)
         else:
             sml_photo = bigphoto
 
-        background_img = Image.new('RGBA', sml_photo.size, (0, 0, 0, 0))
-        # # Paste the image on top of the background
+        background_img = Image.new('RGBA', sml_photo.size, "white")
+        # Paste the image on top of the background
         background_img.paste(sml_photo, (0, 0), sml_photo)
-        sml_photo = background_img
+        sml_photo = background_img.convert('RGB')
 
         out_io = BytesIO()
-        sml_photo.save(out_io, format="GIF", optimize=True, quality=95)
+        sml_photo.convert("RGB")
+        sml_photo.save(out_io, format="JPEG", optimize=True, quality=95)
         logger.info("Image size after compression: " + str(get_size_format(len(out_io.getvalue()))))
-        return out_io.getvalue(), "GIF", "image/gif"
+        return out_io.getvalue(), "JPEG", "image/jpeg"
 
     except Exception as e:
         logger.info("Encountered an error downloading image: " + str(e))
