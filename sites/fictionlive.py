@@ -76,9 +76,9 @@ class FictionLive(Site):
                                     votes[choice] = votes.get(choice, 0) + 1
                         choices = [(votes[v], v) for v in votes]
                         choices.sort(reverse=True)
-                        html.append('<hr/><ul>')
+                        html.append('<hr/><ul class="votes_ul_list">')
                         for votecount, choice in choices:
-                            html.append(f'<li>{choice}: {votecount}</li>')
+                            html.append(f'<li><span class="li_left">{choice}</span> <span class="li_right">{votecount}</span></li>')
                         html.append('</ul><hr/>')
                     elif segment['nt'] == 'readerPost':
                         pass

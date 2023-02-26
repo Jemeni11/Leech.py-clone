@@ -217,6 +217,27 @@ ul, ol, dl {
   margin: 1em 0 1em 0;
   text-align: left; }
 
+ul.votes_ul_list {
+    list-style-type: none;
+    box-sizing: border-box;
+    padding-inline: 1rem;
+}
+
+ul.votes_ul_list li {
+    display: flex;
+    margin-bottom: 0.5em;
+}
+
+ul.votes_ul_list li span.li_left {
+    width: 80%;
+    text-align: left;
+}
+
+ul.votes_ul_list li span.li_right {
+    width: 20%;
+    text-align: right;
+}
+
 li {
   font-family: "Palatino", "Times New Roman", Caecilia, serif;
   line-height: 1.5em;
@@ -224,7 +245,8 @@ li {
   widows: 2;
   text-align: justify;
   text-indent: 0;
-  margin: 0; }
+  margin: 0;
+}
   li p {
     /* Fix paragraph indenting inside of lists */
     text-indent: 0em; }
@@ -801,8 +823,7 @@ def chapter_html(story, titleprefix=None, normalize=False):
                 if not img.has_attr('src'):
                     print(f"Image {count+1} has no src attribute, skipping...")
                     continue
-                print(f"Converting image {count+1} out of {len_of_all_images} from chapter {i}")
-                print(img)
+                print(f"Downloading image {count+1} out of {len_of_all_images} from chapter {i}")
                 coverted_image_bytes, ext, mime = get_image_from_url(img['src'])
                 chapter.images.append(Image(
                     path=f"images/ch{i}_leechimage_{count}.{ext}",
