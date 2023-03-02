@@ -212,6 +212,11 @@ p {
   float: left;
   height: 0.8em; }
 
+hr {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
 /* lists */
 ul, ol, dl {
   margin: 1em 0 1em 0;
@@ -289,8 +294,15 @@ img {
   box-sizing: border-box;
   border: none;
   /* Don't go too big on images, let reader zoom in if they care to */
-  max-width: 100%;
+  max-width: 90%;
   max-height: 90%; }
+
+img .img_center {
+  text-indent: 0;
+  text-align: center;
+  margin: 1em auto;
+  display: block;
+}
 
 img.pwhack {
   /* Paperwhite hack */
@@ -833,6 +845,10 @@ def chapter_html(story, titleprefix=None, normalize=False):
                 img['src'] = f"../images/ch{i}_leechimage_{count}.{ext}"
                 if not img.has_attr('alt'):
                     img['alt'] = f"Image {count} from chapter {i}"
+                if img.has_attr('class'):
+                    img['class'] += " img_center"
+                else:
+                    img['class'] = "img_center"
             # Add all pictures on this chapter as well.
             for chapter_image in chapter.images:
                 # For/else syntax, check if the image path already exists, if it doesn't add the image.
