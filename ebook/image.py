@@ -98,27 +98,42 @@ def get_image_from_url(url: str):
         image = BytesIO(img.content)
         image.seek(0)
 
-        bigphoto = Image.open(image).convert("RGBA")
-        # Establish Target Size
-        target_byte_count = 100_000
-        target_pixel_count = 2.8114 * target_byte_count
-        scale_factor = target_pixel_count / math.prod(bigphoto.size)
-        if scale_factor < 1:
-            sml_size = tuple(int(scale_factor * dim) for dim in bigphoto.size)
-            sml_photo = bigphoto.resize(sml_size, resample=Image.LANCZOS)
+        image_size = get_size_format(len(image.getvalue()))
+        logger.info(f"Image size: {image_size}")
+
+        if Image.open(image).format.lower() not in ["jpeg", "jpg"]:
+            bigphoto = Image.open(image).convert("RGBA")
+
+            if image_size[-2:] == "MB":
+                target_byte_count = 250_000  # Establish Target Size
+                target_pixel_count = 2.8114 * target_byte_count
+            elif image_size[-2:] == "KB" and int(float(image_size[:-2])) > 200:
+                target_byte_count = 175_000  # Establish Target Size
+                target_pixel_count = 2.8114 * target_byte_count
+            else:
+                target_byte_count = 100_000  # Establish Target Size
+                target_pixel_count = 2.8114 * target_byte_count
+            scale_factor = target_pixel_count / math.prod(bigphoto.size)
+            if scale_factor < 1:
+                x, y = tuple(int(scale_factor * dim) for dim in bigphoto.size)
+                sml_photo = bigphoto.resize((x, y), resample=Image.LANCZOS)
+            else:
+                sml_photo = bigphoto
+
+            background_img = Image.new('RGBA', sml_photo.size, "white")
+            # Paste the image on top of the background
+            background_img.paste(sml_photo, (0, 0), sml_photo)
+            sml_photo = background_img.convert('RGB')
+
+            out_io = BytesIO()
+            sml_photo.convert("RGB")
+            sml_photo.save(out_io, format="JPEG", optimize=True, quality=95)
+
+            logger.info(f"Image size after compression: {get_size_format(len(out_io.getvalue()))}")
+            return out_io.getvalue(), "jpeg", "image/jpeg"
         else:
-            sml_photo = bigphoto
-
-        background_img = Image.new('RGBA', sml_photo.size, "white")
-        # Paste the image on top of the background
-        background_img.paste(sml_photo, (0, 0), sml_photo)
-        sml_photo = background_img.convert('RGB')
-
-        out_io = BytesIO()
-        sml_photo.convert("RGB")
-        sml_photo.save(out_io, format="JPEG", optimize=True, quality=95)
-        logger.info("Image size after compression: " + str(get_size_format(len(out_io.getvalue()))))
-        return out_io.getvalue(), "JPEG", "image/jpeg"
+            logger.info(f"Image size (No compression needed): {get_size_format(len(image.getvalue()))}")
+            return image.getvalue(), "jpeg", "image/jpeg"
 
     except Exception as e:
         logger.info("Encountered an error downloading image: " + str(e))
