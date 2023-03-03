@@ -76,7 +76,13 @@ class FictionLive(Site):
                                     votes[choice] = votes.get(choice, 0) + 1
                         choices = [(votes[v], v) for v in votes]
                         choices.sort(reverse=True)
-                        html.append('<hr/><ul class="votes_ul_list">')
+
+                        closed = "closed" if 'closed' in segment.keys() else "open"
+                        vote_title = segment['b'] if 'b' in segment.keys() else "Choices"
+
+                        vote_header_output = f"<h3 class='vote_header_output center'>{vote_title} — <small>Voting {closed} </small></h3>"
+
+                        html.append(f'{vote_header_output}<hr/><ul class="votes_ul_list">')
                         for votecount, choice in choices:
                             html.append(f'<li><span class="li_left">{choice}</span> <span class="li_right">{votecount}</span></li>')
                         html.append('</ul><hr/>')

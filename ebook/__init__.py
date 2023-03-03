@@ -212,6 +212,10 @@ p {
   float: left;
   height: 0.8em; }
 
+.vote_header_output {
+    font-size: 1em;
+}
+
 hr {
   margin-top: 1em;
   margin-bottom: 1em;
