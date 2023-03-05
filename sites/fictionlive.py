@@ -87,7 +87,15 @@ class FictionLive(Site):
                             html.append(f'<li><span class="li_left">{choice}</span> <span class="li_right">{votecount}</span></li>')
                         html.append('</ul><hr/>')
                     elif segment['nt'] == 'readerPost':
-                        pass
+                        reader_post_title = segment['b'] if 'b' in segment.keys() else "Reader Post"
+                        closed = "closed" if 'closed' in segment.keys() else "open"
+                        html.append(f'<h3 class="reader_post_title center">{reader_post_title} — <small>Posting {closed} </small></h3>')
+                        for i in ["dice", "votes"]:
+                            if i in segment.keys():
+                                html.append('<hr/><ul class="reader_post_list">')
+                                for j in segment[i]:
+                                    html.append(f'<li>{segment[i][j]}</li>')
+                                html.append('</ul><hr/>')
                     else:
                         logger.info("Skipped chapter-segment of unhandled type: %s", segment['nt'])
                 except Exception as e:

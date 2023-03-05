@@ -212,7 +212,8 @@ p {
   float: left;
   height: 0.8em; }
 
-.vote_header_output {
+.vote_header_output,
+.reader_post_title {
     font-size: 1em;
 }
 
@@ -226,13 +227,15 @@ ul, ol, dl {
   margin: 1em 0 1em 0;
   text-align: left; }
 
-ul.votes_ul_list {
+ul.votes_ul_list,
+ul.reader_post_list {
     list-style-type: none;
     box-sizing: border-box;
     padding-inline: 1rem;
 }
 
-ul.votes_ul_list li {
+ul.votes_ul_list li,
+ul.reader_post_list li {
     display: flex;
     margin-bottom: 0.5em;
 }
