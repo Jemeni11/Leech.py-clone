@@ -89,9 +89,20 @@ class FictionLive(Site):
                     elif segment['nt'] == 'readerPost':
                         reader_post_title = segment['b'] if 'b' in segment.keys() else "Reader Post"
                         closed = "closed" if 'closed' in segment.keys() else "open"
-                        html.append(f'<h3 class="reader_post_title center">{reader_post_title} — <small>Posting {closed} </small></h3>')
                         for i in ["dice", "votes"]:
                             if i in segment.keys():
+                                if i == "dice":
+                                    dice_title = '<h3 class="reader_post_title center">'
+                                    if reader_post_title == "Reader Post":
+                                        dice_title += '<span>Dice</span></h3>'
+                                    else:
+                                        dice_title += f'<span<Dice: {reader_post_title}</span></h3>'
+                                    html.append(dice_title)
+                                elif i == "votes":
+                                    html.append(
+                                        f'<h3 class="reader_post_title center">'
+                                        f'<span>{reader_post_title}</span> - '
+                                        f'<small>Posting {closed} </small></h3>')
                                 html.append('<hr/><ul class="reader_post_list">')
                                 for j in segment[i]:
                                     html.append(f'<li>{segment[i][j]}</li>')
