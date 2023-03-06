@@ -833,16 +833,18 @@ def chapter_html(story, titleprefix=None, normalize=False):
             chapters.extend(chapter_html(
                 chapter, titleprefix=title, normalize=normalize))
         else:
+            i += 1
             soup = BeautifulSoup(chapter.contents, 'html5lib')
             all_images = soup.find_all('img')
             len_of_all_images = len(all_images)
-            print(f"\nFound {len_of_all_images} images in chapter {i}\n")
+            print(f"Found {len_of_all_images} images in chapter {i}")
 
             for count, img in enumerate(all_images):
+                count += 1
                 if not img.has_attr('src'):
-                    print(f"Image {count+1} has no src attribute, skipping...")
+                    print(f"Image {count} has no src attribute, skipping...")
                     continue
-                print(f"Downloading image {count+1} out of {len_of_all_images} from chapter {i}")
+                print(f"Downloading image {count} out of {len_of_all_images} from chapter {i}")
                 coverted_image_bytes, ext, mime = get_image_from_url(img['src'])
                 chapter.images.append(Image(
                     path=f"images/ch{i}_leechimage_{count}.{ext}",
@@ -874,7 +876,7 @@ def chapter_html(story, titleprefix=None, normalize=False):
                 contents = unicodedata.normalize('NFKC', contents)
             chapters.append(EpubFile(
                 title=title,
-                path=f'{story.id}/chapter{i + 1}.html',
+                path=f'{story.id}/chapter{i}.html',
                 contents=html_template.format(
                     title=html.escape(title), text=contents)
             ))
