@@ -12,50 +12,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def convert_image(url, sizes=(580, 725), grayscale=False,
-                  removetrans=True, imgtype="jpg", background='#ffffff', jpg_quality=95):
-    # logger.debug("Pillow convert_image called")
-    export = False
-    logger.info("Downloading image from " + url)
-    data = requests.Session().get(url).content
-    img = Image.open(BytesIO(data))
-
-    owidth, oheight = img.size
-    nwidth, nheight = sizes
-    scaled, nwidth, nheight = fit_image(owidth, oheight, nwidth, nheight)
-    if scaled:
-        img = img.resize((nwidth, nheight), Image.ANTIALIAS)
-        export = True
-
-    if normalize_format_name(img.format) != imgtype:
-        if img.mode == "P":
-            # convert pallete gifs to RGB so jpg save doesn't fail.
-            img = img.convert("RGB")
-        export = True
-
-    if removetrans and img.mode == "RGBA":
-        background = Image.new('RGBA', img.size, background)
-        # Paste the image on top of the background
-        background.paste(img, img)
-        img = background.convert('RGB')
-        export = True
-
-    if grayscale and img.mode != "L":
-        img = img.convert("L")
-        export = True
-
-    if export:
-        outsio = BytesIO()
-        if imgtype == 'jpg':
-            img.save(outsio, convtype[imgtype], quality=jpg_quality, optimize=True)
-        else:
-            img.save(outsio, convtype[imgtype])
-        return outsio.getvalue(), imgtype, imagetypes[imgtype]
-    else:
-        # logger.debug("image used unchanged")
-        return data, imgtype, imagetypes[imgtype]
-
-
 def make_image(
     message: str,
     width=600,
@@ -185,29 +141,6 @@ def draw_text_outlined(draw, xy, text, fill=None, font=None, anchor=None):
     draw.text(xy, text=text, fill=fill, font=font, anchor=anchor)
 
 
-def fit_image(width, height, pwidth, pheight):
-    '''
-    Fit image in box of width pwidth and height pheight.
-    @param width: Width of image
-    @param height: Height of image
-    @param pwidth: Width of box
-    @param pheight: Height of box
-    @return: scaled, new_width, new_height. scaled is True iff new_width and/or new_height is different from width or height.
-    '''
-    scaled = height > pheight or width > pwidth
-    if height > pheight:
-        corrf = pheight / float(height)
-        width, height = floor(corrf * width), pheight
-    if width > pwidth:
-        corrf = pwidth / float(width)
-        width, height = pwidth, floor(corrf * height)
-    if height > pheight:
-        corrf = pheight / float(height)
-        width, height = floor(corrf * width), pheight
-
-    return scaled, int(width), int(height)
-
-
 def get_image_size(data):
     img = Image.open(BytesIO(data))
     owidth, oheight = img.size
@@ -246,75 +179,6 @@ def normalize_format_name(fmt):
         if fmt == 'jpeg':
             fmt = 'jpg'
     return fmt
-
-
-def download_from_url_and_convert_image(
-    url: str,
-    # sizes=(580, 725),
-    grayscale=False,
-    remove_trans=False,
-    img_ext_type="jpg",
-    background='#ffffff',
-    image_quality=85
-) -> bytes:
-    """
-    Stole this from FanFicFare
-    """
-    logger.debug("Pillow convert_image called")
-    try:
-        logger.info("Downloading image from " + url)
-        url = url.strip()
-
-        if url.startswith("data:image") and 'base64' in url:
-            head, base64data = url.split(',', 1)
-            file_ext = head.split(';')[0].split('/')[1]
-            imgdata = b64decode(base64data)
-            image_bytes = BytesIO(imgdata).read()
-            if file_ext.lower() not in ["jpg", "jpeg"]:
-                return _convert_to_jpg(image_bytes).read()
-            return image_bytes
-        else:
-            image_response = requests.Session().get(url)
-            image_bytes = BytesIO(image_response.content)
-
-        export = False
-        img = Image.open(image_bytes)
-        logger.info("Image size: " + str(get_size_format(len(image_bytes.getvalue()))))
-        o_width, o_height = img.size
-        # n_width, n_height = sizes
-        # scaled, n_width, n_height = fit_image(o_width, o_height, n_width, n_height)
-
-        # if scaled:
-        # img = img.resize((n_width, n_height), Image.ANTIALIAS)
-        # export = True
-
-        if normalize_format_name(img.format) != img_ext_type:
-            if img.mode == "P":
-                # convert pallet gifs to RGB so jpg save doesn't fail.
-                img = img.convert("RGB")
-            export = True
-
-        if remove_trans and img.mode == "RGBA":
-            background_img = Image.new('RGBA', img.size, background)
-            # Paste the image on top of the background
-            background_img.paste(img)
-            img = background_img.convert('RGB')
-            export = True
-
-        if export:
-            out_io = BytesIO()
-            img = img.convert("RGB")
-            if img_ext_type == 'jpg':
-                img.save(out_io, convtype[img_ext_type], quality=image_quality, optimize=True)
-            else:
-                img.save(out_io, "JPEG")
-            logger.info("Image size after compression: " + str(get_size_format(len(image_bytes.getvalue()))))
-            return out_io.getvalue()
-
-    except Exception as e:
-        logger.info("Encountered an error downloading image: " + str(e))
-        # image = make_image("There was a problem downloading this image.")
-        # return image.read()
 
 
 if __name__ == '__main__':
