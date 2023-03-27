@@ -67,12 +67,33 @@ def compress_image(image: BytesIO) -> PIL.Image.Image:
     return sml_photo
 
 
-def PIL_Image_to_bytes(pil_image: PIL.Image.Image, image_format: str, print_new_image_size: bool = False) -> bytes:
+def PIL_Image_to_bytes(
+    pil_image: PIL.Image.Image,
+    image_format: str,
+    image_bytes: bytes,
+    print_new_image_size: bool = False
+) -> bytes:
     out_io = BytesIO()
+    if image_format.lower().startswith("gif"):
+        # pil_image.save(out_io, save_all=True, format=image_format, optimize=True, loop=0)
+        logger.info(f"Original image size: {get_size_format(len(image_bytes))}")
+        frames = []
+        current = pil_image.convert('RGBA')
+        while True:
+            try:
+                frames.append(current)
+                pil_image.seek(pil_image.tell() + 1)
+                current = Image.alpha_composite(current, pil_image.convert('RGBA'))
+            except EOFError:
+                break
+        frames[0].save(out_io, format=image_format, save_all=True, append_images=frames[1:], optimize=True, loop=0)
+        if print_new_image_size:
+            logger.info(f"Final image size: {get_size_format(len(out_io.getvalue()))}")
+        return out_io.getvalue()
+
     if image_format.lower() in ["jpeg", "jpg"]:
         pil_image.convert("RGB")
-    if image_format.lower().startswith("gif"):
-        pil_image.save(out_io, save_all=True, format=image_format, optimize=True, quality=95, loop=0)
+
     pil_image.save(out_io, format=image_format, optimize=True, quality=95)
     if print_new_image_size:
         logger.info(f"Final image size: {get_size_format(len(out_io.getvalue()))}")
@@ -93,7 +114,7 @@ def get_image_from_url(url: str):
             file_ext = head.split(';')[0].split('/')[1]
             imgdata = b64decode(base64data)
             compressed_base64_image = compress_image(BytesIO(imgdata))
-            image_bytes = PIL_Image_to_bytes(compressed_base64_image, file_ext)
+            image_bytes = PIL_Image_to_bytes(compressed_base64_image, file_ext, imgdata)
             if file_ext.lower() not in ["jpg", "jpeg", "gif"]:
                 return _convert_to_jpg(image_bytes).read(), "jpeg", "image/jpeg"
             if file_ext.lower() == "jpg":
@@ -110,7 +131,7 @@ def get_image_from_url(url: str):
             PIL_image = Image.open(image)
             if PIL_image.info['version'] not in [b"GIF89a", "GIF89a"]:
                 PIL_image.info['version'] = b"GIF89a"
-            return PIL_Image_to_bytes(PIL_image, "GIF"), "gif", "image/gif"
+            return PIL_Image_to_bytes(PIL_image, "GIF", image.getvalue(), True), "gif", "image/gif"
 
         sml_photo = compress_image(image)
 
@@ -120,7 +141,7 @@ def get_image_from_url(url: str):
         background_img.paste(sml_photo, (0, 0), sml_photo)
         sml_photo = background_img.convert('RGB')
 
-        return PIL_Image_to_bytes(sml_photo, "JPEG", True), "jpeg", "image/jpeg"
+        return PIL_Image_to_bytes(sml_photo, "JPEG", image.getvalue(), True), "jpeg", "image/jpeg"
 
     except Exception as e:
         logger.info("Encountered an error downloading image: " + str(e))
@@ -128,7 +149,7 @@ def get_image_from_url(url: str):
         return image.read(), "jpeg", "image/jpeg"
 
 
-def _convert_to_jpg(image_bytestream):
+def _convert_to_jpg(image_bytestream) -> BytesIO:
     png_image = BytesIO()
     Image.open(image_bytestream).save(png_image, format="JPEG")
     png_image.name = 'cover.jpeg'
