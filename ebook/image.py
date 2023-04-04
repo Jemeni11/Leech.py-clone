@@ -103,6 +103,8 @@ def PIL_Image_to_bytes(
 def get_image_from_url(url: str):
     """
     Basically the same as make_cover_from_url()
+    @param url: The url of the image
+    @return: A tuple of the image data, the image format and the image mime type
     """
     try:
         if url.startswith("https://www.filepicker.io/api/"):
@@ -121,7 +123,7 @@ def get_image_from_url(url: str):
                 file_ext = "jpeg"
             return image_bytes, file_ext, f"image/{file_ext}"
 
-        logger.info("Downloading image from " + url)
+        print(url)
         img = requests.Session().get(url)
         image = BytesIO(img.content)
         image.seek(0)

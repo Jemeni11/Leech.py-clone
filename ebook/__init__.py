@@ -844,7 +844,7 @@ def chapter_html(story, titleprefix=None, normalize=False):
                 if not img.has_attr('src'):
                     print(f"Image {count} has no src attribute, skipping...")
                     continue
-                print(f"Downloading image {count} out of {len_of_all_images} from chapter {i}")
+                print(f"[Chapter {i}] Image ({count} out of {len_of_all_images}). Source: ", end="")
                 coverted_image_bytes, ext, mime = get_image_from_url(img['src'])
                 chapter.images.append(Image(
                     path=f"images/ch{i}_leechimage_{count}.{ext}",
